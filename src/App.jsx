@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-const API = 'https://prices.runescape.wiki/api/v1/osrs';
+const API = '/api/wiki';
 const SEED = [
   { id: 4151, name: 'Abyssal whip', icon: '⚔', category: 'Weapons', low: 2451200, high: 2465000, change: 1.82, volume: 183 },
   { id: 11840, name: 'Dragon boots', icon: '◈', category: 'Armour', low: 1878000, high: 1892000, change: -.64, volume: 92 },
@@ -67,6 +67,21 @@ function ForecastModal({ items, selected, onClose, onSubmit }) {
   const [id, setId] = useState(String(selected)); const [target, setTarget] = useState(''); const [horizon, setHorizon] = useState('7'); const [notes, setNotes] = useState('');
   return <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button className="modal-close" onClick={onClose}>×</button><div className="section-kicker">PERSONAL TRADING JOURNAL</div><h2 id="modal-title">Log a forecast</h2><p className="modal-intro">Set a target and horizon. We’ll compare it with the market when it comes due.</p><form onSubmit={e => { e.preventDefault(); onSubmit({ itemId: Number(id), target: Number(target), horizon: Number(horizon), notes }); }}><label>ITEM<select value={id} onChange={e => setId(e.target.value)}>{items.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label><label>YOUR TARGET PRICE<div className="input-suffix"><input type="number" min="1" value={target} onChange={e => setTarget(e.target.value)} placeholder="e.g. 2,450,000" required/><span>gp</span></div></label><label>TIME HORIZON<select value={horizon} onChange={e => setHorizon(e.target.value)}><option value="1">1 day</option><option value="7">7 days</option><option value="30">30 days</option></select></label><label className="notes-label">WHY THIS CALL? <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional notes — what are you seeing?"/></label><button className="primary-button modal-submit" type="submit">Save forecast <span>→</span></button></form></section></div>;
 }
+function ApiSettings({ initialValue, required, onClose, onSave }) {
+  const [value, setValue] = useState(initialValue);
+  const [error, setError] = useState('');
+  return <div className="modal-backdrop" onMouseDown={e => { if (!required && e.target === e.currentTarget) onClose(); }}><section className="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="api-settings-title">
+    {!required && <button className="modal-close" onClick={onClose}>×</button>}
+    <div className="section-kicker">MARKET DATA CONNECTION</div><h2 id="api-settings-title">Identify your app</h2>
+    <p className="modal-intro">The OSRS Wiki price API asks clients to send a descriptive User-Agent. It does not require an API key. Enter an identifier or contact detail so GE Ledger can label its requests.</p>
+    <form onSubmit={e => { e.preventDefault(); const identifier = value.trim(); if (identifier.length < 4) { setError('Enter a descriptive app name or contact identifier.'); return; } onSave(identifier); }}>
+      <label>USER-AGENT IDENTIFIER<input autoFocus value={value} onChange={e => { setValue(e.target.value); setError(''); }} maxLength={160} placeholder="GE Ledger / username or contact" required /></label>
+      <p className="settings-help">Example: <code>GE Ledger / jordan@example.com</code>. This is stored in this browser and sent to the Wiki API through the local app server.</p>
+      {error && <p className="settings-error">{error}</p>}
+      <div className="settings-actions">{!required && <button className="subtle-button" type="button" onClick={onClose}>Cancel</button>}<button className="primary-button modal-submit" type="submit">Save &amp; connect</button></div>
+    </form>
+  </section></div>;
+}
 function App() {
   const [store, setStore] = useState(readStore);
   const [items, setItems] = useState(SEED);
@@ -77,14 +92,18 @@ function App() {
   const [status, setStatus] = useState('Connecting to market');
   const [updated, setUpdated] = useState('Prices from the OSRS Wiki');
   const [modal, setModal] = useState(false);
+  const [userAgent, setUserAgent] = useState(() => localStorage.getItem('ge-ledger-user-agent') || '');
+  const [settingsOpen, setSettingsOpen] = useState(() => !localStorage.getItem('ge-ledger-user-agent'));
   const [toast, setToast] = useState('');
   const itemById = useCallback((id) => items.find(x => x.id === Number(id)) || allItems.find(x => x.id === Number(id)), [items, allItems]);
   const notify = message => { setToast(message); window.setTimeout(() => setToast(''), 2300); };
   useEffect(() => { localStorage.setItem('ge-ledger-v1', JSON.stringify(store)); }, [store]);
   const refresh = useCallback(async () => {
+    if (!userAgent) { setStatus('Set your API identifier'); setUpdated('Open settings to connect to market data'); return; }
     try {
       setStatus('Refreshing market');
-      const [mappingRes, latestRes, avgRes] = await Promise.all([fetch(`${API}/mapping`), fetch(`${API}/latest`), fetch(`${API}/5m`)]);
+      const options = { headers: { 'X-Wiki-User-Agent': userAgent } };
+      const [mappingRes, latestRes, avgRes] = await Promise.all([fetch(`${API}/mapping`, options), fetch(`${API}/latest`, options), fetch(`${API}/5m`, options)]);
       if (!mappingRes.ok || !latestRes.ok) throw new Error('Market request failed');
       const [mapping, latest, avgData] = await Promise.all([mappingRes.json(), latestRes.json(), avgRes.ok ? avgRes.json() : {}]);
       const metas = new Map(mapping.map(meta => [meta.id, meta]));
@@ -104,7 +123,7 @@ function App() {
       setItems(visible.map(x => ({ ...x, icon: ICONS[x.id] || x.icon, forecast: store.forecasts.find(f => f.itemId === x.id && f.actual == null)?.target || null })));
       setAllItems(sample); setStatus('Market data connected'); setUpdated(`Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
     } catch { setStatus('Using preview prices'); setUpdated('Could not reach the Wiki API'); }
-  }, [store.watchlist, store.forecasts]);
+  }, [store.watchlist, store.forecasts, userAgent]);
   useEffect(() => { refresh(); const interval = window.setInterval(refresh, 5 * 60 * 1000); return () => window.clearInterval(interval); }, [refresh]);
   useEffect(() => {
     const tick = () => setStore(previous => {
@@ -135,10 +154,11 @@ function App() {
     setModal(false); notify('Forecast saved. We’ll review it when it’s due.');
   };
   const remove = id => setStore(s => ({ ...s, watchlist: s.watchlist.filter(itemId => itemId !== id) }));
+  const saveUserAgent = identifier => { localStorage.setItem('ge-ledger-user-agent', identifier); setUserAgent(identifier); setSettingsOpen(false); notify('API identifier saved. Connecting to market data…'); };
   const current = itemById(selected) || SEED[0];
   return <div className="app-shell">
     <Sidebar watchlist={store.watchlist} selected={selected} items={items} status={status} updated={updated} onSelect={setSelected} onAdd={addItem}/>
-    <main className="main-content"><header className="topbar"><div className="crumb">MARKET DESK <span>/</span> <b>Overview</b></div><div className="top-actions"><span className="live-pill"><i/> {status === 'Market data connected' ? 'LIVE PRICES' : 'MARKET OPEN'}</span><button className="icon-button" title="Refresh prices" onClick={refresh}>↻</button><div className="avatar">J</div></div></header>
+    <main className="main-content"><header className="topbar"><div className="crumb">MARKET DESK <span>/</span> <b>Overview</b></div><div className="top-actions"><span className="live-pill"><i/> {status === 'Market data connected' ? 'LIVE PRICES' : 'MARKET OPEN'}</span><button className="icon-button" title="Refresh prices" onClick={refresh}>↻</button><button className="icon-button settings-button" title="API settings" aria-label="API settings" onClick={() => setSettingsOpen(true)}>⚙</button><div className="avatar">J</div></div></header>
       <div className="page-wrap"><section className="welcome-row"><div><div className="eyebrow">MONDAY, SEPTEMBER 28, 2026 <span className="eyebrow-sep">•</span> GRAND EXCHANGE</div><h1>Your market, <span>in focus.</span></h1><p className="subhead">A calmer view of prices, opportunities, and how your forecasts are holding up.</p></div><button className="primary-button" onClick={() => setModal(true)}><span>＋</span> Log a forecast</button></section>
         <section className="metric-grid" aria-label="Market summary"><article className="metric-card"><div className="metric-top">WATCHLIST VALUE <span className="metric-icon gold">◈</span></div><div className="metric-value">{compact(value)} <small>gp</small></div><div className="metric-foot"><span className="positive">{watchItems.filter(x => x.change > 0).length} items up today</span><span>across {watchItems.length} items</span></div></article><article className="metric-card"><div className="metric-top">MARKET PULSE <span className="metric-icon mint">↗</span></div><div className="metric-value">{fmt(allItems.length || items.length)} <small>items</small></div><div className="metric-foot"><span className="positive">↑ {allItems.filter(x => x.change > 0).length || '—'} gainers</span><span className="negative">↓ {allItems.filter(x => x.change < 0).length || '—'} decliners</span></div></article><article className="metric-card"><div className="metric-top">FORECAST ACCURACY <span className="metric-icon lavender">⌁</span></div><div className="metric-value">{accuracy ?? '—'}<small>%</small></div><div className="metric-foot"><span className="neutral">{closed.length ? `${closed.length} outcomes reviewed` : 'Waiting for outcomes'}</span><span>{store.forecasts.length} forecasts logged</span></div></article></section>
         <section className="market-layout"><PriceChart item={current} snapshots={store.snapshots} range={range} setRange={setRange}/><Movers items={showAll && allItems.length ? allItems : items} watchlist={store.watchlist} showAll={showAll} setShowAll={setShowAll} onSelect={setSelected}/></section>
@@ -148,6 +168,7 @@ function App() {
       </div>
     </main>
     {modal && <ForecastModal key={selected} items={items} selected={selected} onClose={() => setModal(false)} onSubmit={submitForecast}/>}
+    {settingsOpen && <ApiSettings initialValue={userAgent} required={!userAgent} onClose={() => setSettingsOpen(false)} onSave={saveUserAgent}/>}
     <div className={`toast ${toast ? 'show' : ''}`}>{toast}</div>
   </div>;
 }

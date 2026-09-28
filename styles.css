@@ -6,3 +6,32 @@
 .mover-row{width:100%;font-family:inherit;text-align:left;background:transparent;border:0;color:inherit;cursor:pointer}
 .item-cell{border:0;background:transparent;padding:0;text-align:left;cursor:pointer}
 .empty-row{text-align:center;padding:22px;color:#7d897e}
+
+/* Old School RuneScape inspired palette: worn timber, parchment, bronze and gold */
+:root{--bg:#17120d;--panel:#211a12;--panel-soft:#2b2117;--line:#4b3925;--line-soft:#382a1c;--text:#f0e4c8;--muted:#b6a47e;--dim:#8b7957;--green:#9bd477;--green-dark:#24351f;--red:#dc8068;--gold:#e0b653;--lav:#bca982}
+body{background:var(--bg);color:var(--text)}
+.sidebar{background:#1b150f;border-color:#42311e}
+.brand-mark{background:#d9ae4d;color:#2a1c0b;box-shadow:0 3px 16px #c7973630}
+.nav-item{color:#b09d78}.nav-item.active{background:#322517;color:#f2dfb1}.nav-item.active>span{color:#e5b84f}
+.side-label,.side-foot,.crumb,.eyebrow,.section-kicker{color:#a38e65}
+.nav-item>span,.nav-item em,.side-watch small{color:#a38b60}
+.side-watch:hover,.side-watch.selected{background:#312517}.item-glyph{background:#322719;border-color:#604727;color:#e6c77e}
+.sync-indicator{border-color:#49361f}.sync-indicator b{color:#dec997}.sync-indicator small{color:#a08a62}
+.sync-indicator>i,.live-pill i,.tiny-dot,.storage-line span i{background:#9bd477;box-shadow:0 0 8px #8fc76955}
+.crumb b{color:#e0d1ad}.crumb span{color:#8e7040}.live-pill{border-color:#6a512a;color:#e1c078;background:#2b2117}
+.icon-button{border-color:#604728;color:#dfc896}.icon-button:hover,.subtle-button:hover{background:#382a1b;border-color:#86632d}
+.avatar{background:#594125;color:#f0d990}
+.welcome-row h1 span{color:#e2ba60}.eyebrow-sep{color:#dbad46}
+.primary-button{background:#d7a83d;color:#291c0d;box-shadow:0 4px 15px #d5a33a1f}.primary-button:hover{background:#e7bd5d}
+.metric-card,.panel{background:#211a12;border-color:#4a3925}.metric-top,.metric-foot{color:#a18b63}.metric-value small{color:#b09b70}
+.positive{color:#9bd477!important}.negative{color:#dc8068!important}.neutral{color:#d4c49f!important}
+.range-switch,.select-button,.search-box,.subtle-button{border-color:#594226}.range.active{background:#47351e;color:#efd99e}.range{color:#b09a6d}.select-button{background:#2b2117;color:#e0cb9e}
+.chart-plot:before,.chart-plot:after{border-color:#534027}.chart-tooltip{background:#3a2b19;border-color:#77582c;color:#efd38d}
+.chart-note,.chart-source,.y-axis,.x-axis{color:#96805a}.legend-dot{background:#e0b653}
+.tab{color:#aa956b}.tab.active{color:#eed599;border-color:#d6a842}.mover-tabs,.mover-row{border-color:#483620}.mover-name{color:#eadbbb}.mover-price,.mover-change small{color:#a08a63}
+thead{background:#2a2016}th{color:#b59c6d}td{border-color:#3c2d1c;color:#dfd0ac}.item-cell{color:#f0e4c8}.item-sub{color:#a08a64}.forecast-tag{border-color:#58663b;color:#abd78a}.forecast-tag.none{color:#a08a64;border-color:#59452b}.row-menu{color:#b49b6d}
+.table-footer,.storage-line{color:#a28d67}.storage-line{border-color:#493720}.storage-line b{color:#c3ad7b}.recent-chip{background:#382a1b;color:#e0cb9e}.accuracy-ring{border-color:#59462a;border-right-color:#d9aa43}.accuracy-ring small{color:#ae986d}.text-button,.text-link{color:#e0b653}
+.insight-icon{color:#e2b650}.insight-panel p,.forecast-copy p{color:#b3a078}.page-footer{color:#9a835b}.page-footer a{color:#e0b653}
+.modal{background:#251c12;border-color:#69502e}.modal-close{color:#c2a874}.modal-intro{color:#b7a27a}.modal label{color:#c2ab7b}.modal select,.modal input,.modal textarea{background:#18120c;border-color:#624a2b;color:#f0e4c8}.modal select:focus,.modal input:focus,.modal textarea:focus{border-color:#d2a644}.input-suffix span{color:#b19a6b}.toast{background:#e1bd67;color:#291c0d}
+.settings-help{font-size:9px;line-height:1.6;color:#ad986f;margin:-5px 0 0}.settings-help code{color:#e2bf69}.settings-error{color:#e08a70;font-size:9px;margin:-5px 0 0}.settings-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}.settings-actions .modal-submit{width:auto;padding-inline:14px}
+@media(max-width:500px){.settings-actions .modal-submit{width:100%}}
